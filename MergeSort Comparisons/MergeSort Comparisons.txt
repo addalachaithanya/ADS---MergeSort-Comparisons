@@ -1,0 +1,1037 @@
+#include <stdio.h>
+int comparefunc(int * a, int * b)
+{
+	return	*a-*b;
+}
+struct run{
+	char filename[20];
+	int init;
+	int end;
+	int seekvalue;
+	int done;
+	int totalsize;
+	struct run *next;
+};
+
+void basic(char *argv[]){
+	FILE *fp,*ft;
+	int size=0;
+	int len,extra;
+	int runs,count=0,c=3;
+	int remain,no,i=0,r;
+	int arr[1000];
+	fp=fopen(argv[2],"r+b");
+	//printf("%s",argv[2]);
+	fseek(fp,0,SEEK_END);
+	size=ftell(fp);
+	r=size/4000;
+	int total;
+	if((size%4000)>0){
+		//extra=size%4000;
+		r=r+1;
+		}
+	size=size/4;
+	fseek(fp,0,SEEK_SET);
+	char name[20];
+	char dot[2]=".";	
+	strcpy(name,argv[2]);
+	strcat(name,dot);
+	//printf("name is %s\n",name);
+	char str[3]="000";
+	
+	//char *no;
+	int before=0,after=0,diff=0;
+	int inbuf=1000/r;
+	int remove=1000-1000%r;
+	int comparearr[r];
+	int outputbuffer[1000];
+	for(i=0;i<1000;i++)
+		outputbuffer[i]=-1;
+	struct run runarray[r];
+	//printf("done\n");
+	//no=(char*)malloc(5*sizeof(char));
+	i=0;
+	while(i<r){
+		//printf("r is %d",r);
+		if(i+1==r){
+			before=ftell(fp);
+			fseek(fp,0,SEEK_END);
+			after=ftell(fp);
+			diff=(after-before)/sizeof(int);
+			fseek(fp,i*4000,SEEK_SET);
+			//printf("size is %d\n",diff/sizeof(int));
+			fread(arr,sizeof(int),diff,fp);
+		}
+		else{ 
+			diff=1000;
+		fseek(fp,i*4000,SEEK_SET);
+		fread(arr,sizeof(int),diff,fp);
+		}
+		//printf("%d %d\n",arr[0],arr[1]);
+		no=count;
+		while(c>0){
+			remain=no%10;
+			str[c-1]=remain+48;
+			no=no/10;
+			c--;
+		}
+		c=3;
+		qsort(arr,1000, sizeof(int), comparefunc);
+		
+		name[20]="";
+		//printf("runs are %d\n",r);
+		//printf("arr is %d %d\n",arr[0],arr[1]);
+		//printf("\n");
+		strcpy(name,argv[2]);
+		strcat(name,dot);
+		//strcpy(name,"input.bin.");
+		//strcpy(name,argv[2]);
+		//printf("name is %s\n",name);
+		//strcat(name,dot);
+		strcat(name,str);
+		//runarray[i].filename[20]="";
+		ft=fopen(name,"w+b");
+		fseek(ft,0,SEEK_SET);
+		len=sizeof(arr)/sizeof(int);
+		fwrite(arr, sizeof(int),diff, ft);
+		
+		fclose(ft);
+		strcpy(runarray[i].filename,name);
+		//printf("file name is %s\n",runarray[i].filename);
+		runarray[i].init=0;
+		if(diff<inbuf)
+			runarray[i].end=runarray[i].init+inbuf;
+		runarray[i].end=runarray[i].init+inbuf;	
+		runarray[i].seekvalue=0;
+		runarray[i].done=0;
+		runarray[i].totalsize=diff;	
+		count++;
+		
+		//printf("i is %d",i);
+		i++;
+		//printf("i is %d",i);
+	}
+	fclose(fp);
+	i=0;
+	//arr[remove];
+	//printf("length of arr is %d\n\n",sizeof(arr)/sizeof(int));
+	//int t=0;
+	//int buffer=0;
+	while(i<r){
+		//printf("file name is %s\n",runarray[i].filename);
+		ft=fopen(runarray[i].filename,"r+b");
+		fseek(ft,0,SEEK_SET);
+		//printf("t is %d",t);
+		//buffer=t+inbuf;
+		fread(arr+(i*inbuf),sizeof(int),inbuf,ft);
+		//printf("array is %d\n",arr[i]);
+		runarray[i].seekvalue=runarray[i].seekvalue+inbuf;
+		fclose(ft);
+		i++;
+	}
+	//for(i=0;i<1000;i++)
+		//printf("%d",arr[i]);
+	for(i=0;i<r;i++){
+		
+		comparearr[i]=arr[i*inbuf];
+		//printf("compare elements are %d\n",comparearr[i]);
+		runarray[i].init++;
+	}
+	//printf("while loop starts\n\n");
+	int min;
+	int index;
+	fp=fopen(argv[3],"w+b");
+	fclose(fp);
+	while(1){
+		min=2147483647;
+		index=-1;
+		for(i=0;i<r;i++){
+			if(comparearr[i]<min && runarray[i].done==0){
+				min=comparearr[i];
+				//printf("in here for %d %d",comparearr[i],i);
+				index=i;	
+			}
+		}
+		//printf("minimum  is %d\n",min);
+		i=0;
+		if(outputbuffer[0]==-1){
+				outputbuffer[0]=min;				
+			}
+		else{	
+			while(i<1000 && outputbuffer[i]!=-1){
+					i++;								
+				}
+			
+			outputbuffer[i]=min;
+			//printf("min value is %d\n",outputbuffer[i]);
+		}
+		//if((size-total_count)<1000 && (i==size-total_count))
+		//printf("output buffer is %d at the end",outputbuffer[0]);
+		//printf("i is %d\n",i);
+		if(i==999 || ((size-total)>0 && (size-total)<1000 && (i==size-total))){
+			//total_count=total_count+1000;
+			//copy into input.bin & initialize outputbuffer to -1
+			fp=fopen(argv[3],"r+b");
+			//printf("in here when output buffer full\n");
+			//for(i=0;i<1000;i++)
+			//	printf("outputbuffer is %d",outputbuffer[i]);
+			fseek(fp,total*sizeof(int),SEEK_SET);
+			fwrite(outputbuffer,sizeof(int),i+1,fp);
+			total=total+1000;
+			if(total>=r*1000)
+				break;
+			for(i=0;i<1000;i++)
+				outputbuffer[i]=-1;
+			fclose(fp);
+		}
+			//get 4 elements from input.bin.00x if init is equal to end
+		//printf("index check %d with init value %d\n",index,runarray[index].init);
+		if(runarray[index].init==runarray[index].end){
+			//printf("in for seek %d")
+			if(runarray[index].seekvalue==runarray[index].totalsize)
+				runarray[index].done=1;
+			else{
+				ft=fopen(runarray[index].filename,"r+b");
+				//printf("in here for %d\n",index);
+				fseek(ft,4*runarray[index].seekvalue,SEEK_SET);	
+				if(inbuf>(runarray[index].totalsize-runarray[index].seekvalue)){
+					fread(arr+(index*inbuf),sizeof(int),runarray[index].totalsize-runarray[index].seekvalue,ft);
+					runarray[index].init=0;
+					runarray[index].end=runarray[index].init+runarray[index].totalsize-runarray[index].seekvalue;
+					runarray[index].seekvalue=runarray[index].totalsize;
+				}
+				else{
+					runarray[index].seekvalue=runarray[index].seekvalue+inbuf;			
+					fread(arr+(index*inbuf),sizeof(int),inbuf,ft);
+					//printf("arr values are %d %d for index %d\n",arr[index*inbuf+368],arr[index*inbuf+499],index);
+					runarray[index].init=0;
+					runarray[index].end=runarray[index].init+inbuf;
+				}
+				comparearr[index]=arr[index*inbuf+runarray[index].init];
+				//arr[index*4+runarray[index].init]=-1;
+				runarray[index].init++;	
+				fclose(ft);
+			}
+		}
+			//else get from memory array for comparison
+		else{
+			comparearr[index]=arr[index*inbuf+runarray[index].init];
+			//arr[index*4+runarray[index].init]=-1;
+			runarray[index].init++;	
+			//printf("comparing done\n");		
+			}	
+	}
+	//printf("while loop broke\n");
+}
+
+void multistep(char *argv[]){
+	FILE *fp,*ft;
+	int size=0;
+	int len,extra;
+	int runs,count=0,c=3;
+	int remain,no,i=0,r;
+	int arr[1000];
+	fp=fopen(argv[2],"r+b");
+	//printf("%s",argv[2]);
+	fseek(fp,0,SEEK_END);
+	size=ftell(fp);
+	r=size/4000;
+	int total;
+	if((size%4000)>0){
+		//extra=size%4000;
+		r=r+1;
+		}
+	size=size/4;
+	fseek(fp,0,SEEK_SET);
+	char name[20];
+	char dot[2]=".";
+	strcpy(name,argv[2]);
+	strcat(name,dot);
+	char str[3]="000";
+	//char *no;
+	int before=0,after=0,diff=0;
+	int inbuf;
+	//int remove=1000-1000%r;
+	int comparearr[r];
+	int outputbuffer[1000];
+	for(i=0;i<1000;i++)
+		outputbuffer[i]=-1;
+	struct run runarray[r];
+	//printf("done\n");
+	//no=(char*)malloc(5*sizeof(char));
+	i=0;
+	//char dot[10]=".";
+	char super[10]=".super.";
+	while(i<r){
+		//printf("r is %d",r);
+		if(i+1==r){
+			before=ftell(fp);
+			fseek(fp,0,SEEK_END);
+			after=ftell(fp);
+			diff=(after-before)/sizeof(int);
+			fseek(fp,i*4000,SEEK_SET);
+			//printf("size is %d\n",diff/sizeof(int));
+			fread(arr,sizeof(int),diff,fp);
+		}
+		else{ 
+			diff=1000;
+		fseek(fp,i*4000,SEEK_SET);
+		fread(arr,sizeof(int),diff,fp);
+		}
+		//printf("%d %d\n",arr[0],arr[1]);
+		no=count;
+		while(c>0){
+			remain=no%10;
+			str[c-1]=remain+48;
+			no=no/10;
+			c--;
+		}
+		c=3;
+		qsort(arr,1000, sizeof(int), comparefunc);
+		
+		name[20]="";
+		//printf("runs are %d\n",r);
+		//printf("arr is %d %d\n",arr[0],arr[1]);
+		//printf("\n");
+		strcpy(name,argv[2]);
+		strcat(name,dot);
+		strcat(name,str);
+		//runarray[i].filename[20]="";
+		ft=fopen(name,"w+b");
+		fseek(ft,0,SEEK_SET);
+		//len=sizeof(arr)/sizeof(int);
+		fwrite(arr, sizeof(int),diff, ft);
+		
+		fclose(ft);
+		strcpy(runarray[i].filename,name);
+		//printf("file name is %s\n",runarray[i].filename);
+		runarray[i].init=0;
+		if(diff<inbuf)
+			runarray[i].end=runarray[i].init+inbuf;
+		runarray[i].end=runarray[i].init+inbuf;	
+		runarray[i].seekvalue=0;
+		runarray[i].done=0;
+		runarray[i].totalsize=diff;	
+		count++;
+		
+		//printf("i is %d",i);
+		i++;
+		//printf("i is %d",i);
+	}
+	fclose(fp);
+	i=0;
+	count=0;
+	int sruncount=0;
+	//name[20]="input.bin.super.";	
+	int sruns=r/15;
+	int temp=0;
+	int tem=0;
+	int t=0;
+	int srunsize,index,min;
+	int lastsrunsize,initial;
+	if(r%15>0){
+		sruns=sruns+1;
+		lastsrunsize=r%15;
+		}
+	struct run srunarray[sruns];
+	
+	initial=15;
+	remain=0;c=3;
+	int fileSize;	
+	while(i<r){
+		no=sruncount;
+		//printf("while loop starts\n");			
+		while(c>0){
+			remain=no%10;
+			str[c-1]=remain+48;
+			no=no/10;
+			c--;
+		}			
+		c=3;
+		
+		name[20];
+		strcpy(name,argv[2]);
+		strcat(name,super);
+		strcat(name,str);
+		//printf("name is %s with initial is %d\n",name,initial);
+		fp=fopen(name,"w+b"); 
+		fclose(fp);
+		//fp=fopen(name,"r+b");
+		if(sruncount+1==sruns && r%15>0){
+			temp=lastsrunsize;
+			srunsize=lastsrunsize*1000;
+			}
+		else{
+			temp=15;
+			srunsize=temp*1000;
+		}
+		inbuf=1000/temp;
+		count=0;
+		strcpy(srunarray[sruncount].filename,name);
+		srunarray[sruncount].totalsize=srunsize;
+		srunarray[sruncount].seekvalue=0;
+		srunarray[sruncount].init=0;
+		srunarray[sruncount].done=0;
+		srunarray[sruncount].end=srunarray[sruncount].init+1000/sruns;
+		//printf("before loop\n");
+		while(count<temp){	
+			ft=fopen(runarray[i].filename,"rb");
+			fseeko(ft,0,SEEK_SET);
+			fread(arr+count*inbuf,sizeof(int),inbuf,ft);
+			runarray[i].seekvalue=runarray[i].seekvalue+inbuf;
+			runarray[i].init=0;
+			runarray[i].end=runarray[i].init+inbuf;
+			runarray[i].done=0;
+			//printf("runarray[i].init is %d runarray[i].end is %d for i %d\n",runarray[i].init,runarray[i].end,i);
+			fclose(ft);
+			count++;
+			i++;
+		}
+		//printf("after loop\n");
+		comparearr[temp];
+		for(t=0;t<temp;t++){
+			comparearr[t]=arr[t*inbuf];
+			//printf("comparearra is %d with inbuf %d\n",comparearr[t],inbuf);
+			runarray[t+initial*sruncount].init++;
+		}
+		total=0;
+		while(1){
+			min=2147483647;
+			index=-1;
+			for(t=0;t<temp;t++){
+				if(comparearr[t]<min && runarray[t+sruncount*initial].done==0){
+					min=comparearr[t];
+					//printf("in here for %d %d",comparearr[i],i);
+					index=t+sruncount*initial;	
+					//printf("index is %d\n",index);
+				}
+			}
+			//printf("index is %d\n",index);
+			//printf("minimum  is %d\n",min);
+			t=0;
+			if(outputbuffer[0]==-1){
+					outputbuffer[0]=min;				
+				}
+			else{	
+				while(t<1000 && outputbuffer[t]!=-1){
+						
+						t++;								
+					}
+				
+				outputbuffer[t]=min;
+				//printf("output buffer is %d for t %d\n",outputbuffer[t],t);
+				//printf("min value is %d for t %d\n",outputbuffer[t],t);
+			}
+			//if((size-total_count)<1000 && (i==size-total_count))
+			//printf("output buffer is %d at the end",outputbuffer[0]);
+			//printf("t is %d\n",t);
+			
+			if(t==999 || ((srunsize-total)>0 && (srunsize-total)<1000 && (t==srunsize-total))){
+				//printf("total is %d\n",total);
+				//total_count=total_count+1000;
+				//copy into input.bin & initialize outputbuffer to -1
+				fp=fopen(name,"r+b");
+				//printf("in here when output buffer full for t %d\n",t);
+				//for(i=0;i<1000;i++)
+				//	printf("outputbuffer is %d",outputbuffer[i]);
+				
+				fseeko(fp,total*sizeof(int),SEEK_SET);
+				
+				fwrite(outputbuffer,sizeof(int),t+1,fp);
+				total=total+1000;
+				/*if(total==15000){
+					fileSize=ftell(fp)/4;
+					printf("file size inside is %d\n",fileSize);
+				}*/
+				if(total>=temp*1000){
+					for(t=0;t<1000;t++)
+						outputbuffer[t]=-1;
+					//printf("while loop broke\n");	
+					fclose(fp);		
+					break;
+				}
+				for(t=0;t<1000;t++)
+					outputbuffer[t]=-1;
+				fclose(fp);
+				
+			}
+				//get 4 elements from input.bin.00x if init is equal to end
+			//printf("index check %d with init value %d\n",index,runarray[index].init);
+			if(runarray[index].init==runarray[index].end){
+				//printf("in for seek with index %d\n",index);
+				//printf("runarray[index].init is %d runarray[index].end is %d for index %d\n",runarray[index].init,runarray[index].end,index);
+				if(runarray[index].seekvalue==runarray[index].totalsize){
+					runarray[index].done=1;
+					//printf("else here\n");
+				}
+				else{
+					ft=fopen(runarray[index].filename,"rb");
+					//printf("in here for %d with init value %d\n",index,runarray[index].init);
+					fseeko(ft,4*runarray[index].seekvalue,SEEK_SET);	
+					if(inbuf>(runarray[index].totalsize-runarray[index].seekvalue) && (runarray[index].totalsize-runarray[index].seekvalue)>0){
+						fread(arr+(index-initial*sruncount)*inbuf,sizeof(int),runarray[index].totalsize-runarray[index].seekvalue,ft);
+						runarray[index].init=0;
+						runarray[index].end=runarray[index].init+runarray[index].totalsize-runarray[index].seekvalue;
+						//printf("in here runarray[index].init is %d runarray[index].end is %d for index %d\n",runarray[index].init,runarray[index].end,index);
+						runarray[index].seekvalue=runarray[index].totalsize;
+					}
+					else{
+						//printf("else here\n");
+						runarray[index].seekvalue=runarray[index].seekvalue+inbuf;			
+						fread(arr+(index-initial*sruncount)*inbuf,sizeof(int),inbuf,ft);
+						runarray[index].init=0;
+						runarray[index].end=runarray[index].init+inbuf;
+						}
+					comparearr[index-initial*sruncount]=arr[(index-initial*sruncount)*inbuf+runarray[index].init];
+					//arr[index*4+runarray[index].init]=-1;
+					runarray[index].init++;	
+					fclose(ft);
+					}
+				}
+					//else get from memory array for comparison
+			else{
+				comparearr[index-initial*sruncount]=arr[(index-initial*sruncount)*inbuf+runarray[index].init];
+				//arr[index*4+runarray[index].init]=-1;
+				runarray[index].init++;	
+				//printf("comparing done\n");		
+				}	
+		}
+		//printf("i is %d & r is %d\n",i,r);
+		//printf("here after break\n");
+		fp=fopen(srunarray[sruncount].filename,"rb");
+		fseek(fp,0,SEEK_END);
+		fileSize=ftell(fp)/4;
+		//printf("file size is %d\n",fileSize);	
+		sruncount++;
+	}
+	inbuf=1000/sruns;
+	i=0;
+	int filesize;
+	if(r%15>0)
+		lastsrunsize=r%15;
+	srunsize=15*1000;
+	
+		
+	while(i<sruns){
+		ft=fopen(srunarray[i].filename,"rb");
+			fseeko(ft,0,SEEK_SET);
+			srunarray[i].seekvalue=0;
+			srunarray[i].seekvalue=fread(arr+i*inbuf,sizeof(int),inbuf,ft);
+			//srunarray[i].seekvalue=srunarray[i].seekvalue+inbuf;
+			srunarray[i].init=0;
+			srunarray[i].end=srunarray[i].init+inbuf;
+			//printf("seekvalue is %d end value is %d for i %d \n",srunarray[i].seekvalue,srunarray[i].end,i);
+			srunarray[i].done=0;
+			if(i+1==sruns && r%15>0)
+				srunarray[i].totalsize=lastsrunsize*1000;
+			else
+				srunarray[i].totalsize=srunsize;
+			//srunarray[i].totalsize=srunsize;	
+			//printf("each super run size is %d\n",srunarray[i].totalsize);
+			//printf("runarray[i].init is %d runarray[i].end is %d for i %d\n",runarray[i].init,runarray[i].end,i);
+			fclose(ft);
+			i++;
+
+	}
+	//for(i=0;i<995;i++)
+	//	printf("arr is %d\n",arr[i]);
+	for(i=0;i<1000;i++)	
+		outputbuffer[i]=-1;
+	comparearr[sruns];
+	for(i=0;i<sruns;i++){		
+		comparearr[i]=arr[i*inbuf];
+		srunarray[i].init++;
+		}
+	//printf("size is %d\n",size);
+	total=0;
+	//printf("input buffer is %d\n",inbuf);
+	fp=fopen(argv[3],"w+b");
+	fclose(fp);
+	//for(i=0;i<sruns;i++)
+	//	printf("compare array is %d\n",comparearr[i]);
+	while(1){
+			min=2147483647;
+			index=-1;
+			for(i=0;i<sruns;i++){
+				if(comparearr[i]<min && srunarray[i].done==0){
+					min=comparearr[i];
+					//printf("in here for %d %d",comparearr[i],i);
+					index=i;
+					
+				}
+			}
+			
+			i=0;
+			//printf("min is %d\n",min);
+			if(outputbuffer[0]==-1){
+					outputbuffer[0]=min;				
+				}
+			else{	
+				while(i<1000 && outputbuffer[i]!=-1){
+						i++;								
+					}
+				
+				outputbuffer[i]=min;
+			}
+			//if(min==1979173185)
+			//	printf("index is %d seekvalue is %d init is %d end is %d\n",index,srunarray[index].seekvalue,srunarray[index].init,srunarray[index].end);		
+			if(i==999 || ((size-total)>0 && (size-total)<1000 && (i==size-total))){
+				fp=fopen(argv[3],"r+b");
+				//printf("in here\n");
+				fseeko(fp,total*sizeof(int),SEEK_SET);
+				fwrite(outputbuffer,sizeof(int),i+1,fp);
+				total=total+1000;
+				//printf("total is %d\n",total);
+				if(total>=size)
+					break;
+				for(i=0;i<1000;i++)
+					outputbuffer[i]=-1;
+				fclose(fp);
+				}
+			if(srunarray[index].init==srunarray[index].end){
+				if(srunarray[index].seekvalue==srunarray[index].totalsize)
+					{
+					//printf("Done for super run %d with seek value %d\n", index, srunarray[index].seekvalue);
+					srunarray[index].done=1;
+					}
+				
+				else{
+					ft=fopen(srunarray[index].filename,"rb");
+					//if (index==0)
+					//printf("seekvalue is %d\n",srunarray[index].seekvalue);
+					//fseek(ft,4*srunarray[index].seekvalue,SEEK_SET);
+					if(inbuf>(srunarray[index].totalsize-srunarray[index].seekvalue)){
+						fseeko(ft,4*srunarray[index].seekvalue,SEEK_SET);
+						fread(arr+(index*inbuf),sizeof(int),srunarray[index].totalsize-srunarray[index].seekvalue,ft);
+						srunarray[index].init=0;
+					srunarray[index].end=srunarray[index].init+srunarray[index].totalsize-srunarray[index].seekvalue;
+						srunarray[index].seekvalue=srunarray[index].totalsize;
+					}
+					else{					
+						//printf("in here for seek\n");	
+						
+						fseeko(ft,4*srunarray[index].seekvalue,SEEK_SET);
+						
+						//fread(&tem,sizeof(int),1,ft);
+						//printf("temp is %d\n",tem);	
+						//fseek(ft,4*srunarray[index].seekvalue,SEEK_SET);
+						//srunarray[index].seekvalue=srunarray[index].seekvalue+inbuf;	
+						//printf("before seekvalue is %d\n",srunarray[index].seekvalue);		
+						srunarray[index].seekvalue=srunarray[index].seekvalue+fread(arr+(index*inbuf),sizeof(int),inbuf,ft);
+						//if(index==0)
+						//printf("after seekvalue is %d with inbuf %d\n",srunarray[index].seekvalue,inbuf);
+						//if(index==0)
+						//printf("arr values are %d %d\n",arr[index*inbuf],arr[index*inbuf+499]);
+						srunarray[index].init=0;
+						srunarray[index].end=srunarray[index].init+inbuf;
+					}
+					comparearr[index]=arr[index*inbuf+srunarray[index].init];
+					srunarray[index].init++;	
+					fclose(ft);
+				}
+			}
+				//else get from memory array for comparison
+			else{
+				comparearr[index]=arr[index*inbuf+srunarray[index].init];
+				srunarray[index].init++;	
+						
+				}
+		
+
+		}	
+
+}
+void sift(int arr[],int i,int len){	
+	int j;
+	int k,lg,temp;
+	while(i<=len/2){
+		
+		j=2*i+1;
+		if(j>=len)
+			return;
+		k=2*i+2;
+		if(k<len){
+			if(arr[j]<arr[k])
+				lg=j;
+			else
+				lg=k;
+		}
+		else if(j<=len)
+			lg=j;
+		else
+			break;
+		if(arr[i]>arr[lg]){
+			temp=arr[i];
+			arr[i]=arr[lg];
+			arr[lg]=temp;
+			i=lg;
+			}
+		else 
+			return;
+	}
+}
+void heapify(int arr[],int len){
+	if(len==0)
+		return;
+	int i=len/2,temp;
+	while(i>=0){
+		sift(arr,i,len);
+		i--;
+		}
+	
+}
+void replacement(char *argv[]){
+
+int total_size,heap_count,buff_count;
+FILE *fp,*ft;
+int i,t;
+int total_seekvalue=0;
+int outputbuff_count;
+int heap_array[750];
+int buffer_array[250];
+int outputbuffer[1000];
+fp=fopen(argv[2],"r+b");
+fseek(fp,0,SEEK_END);
+total_size=ftell(fp)/4;
+fseek(fp,0,SEEK_SET);
+total_seekvalue=total_seekvalue+fread(heap_array,sizeof(int),750,fp);
+heap_count=750;
+total_seekvalue=total_seekvalue+fread(buffer_array,sizeof(int),250,fp);
+buff_count=0;
+int heap_init=0;
+fclose(fp);
+for(i=0;i<1000;i++)
+	outputbuffer[i]=-1;
+int outputcount=0;
+char name[20];
+
+strcpy(name,argv[2]);
+char dot[2]=".";
+strcat(name,dot);
+int runcount=0;
+int no=0,c,remain=0;
+no=runcount;
+char str[5]="";
+c=3;
+while(c>0){
+	remain=no%10;
+	str[c-1]=remain+48;
+	no=no/10;
+	c--;
+}
+c=3;
+strcat(name,str);
+struct run *head,*tail,*node=NULL,*temp;
+
+int seekcount_run=0;
+fp=fopen(name,"w+b");
+fclose(fp);
+heapify(heap_array,heap_count);
+while(1){
+		if(buff_count==250){
+				if(total_seekvalue<total_size){
+					fp=fopen(argv[2],"r+b");
+					fseek(fp,4*total_seekvalue,SEEK_SET);
+					total_seekvalue=total_seekvalue+fread(buffer_array,sizeof(int),buff_count,fp);
+					buff_count=0;
+					fclose(fp);
+				}
+				else if(total_seekvalue==total_size){
+					fp=fopen(name,"r+b");			
+					fseek(fp,4*seekcount_run,fp);
+					fwrite(outputbuffer,sizeof(int),outputcount,fp);
+					seekcount_run=seekcount_run+outputcount;
+					fseek(fp,4*seekcount_run,SEEK_SET);
+					qsort(heap_array,heap_count, sizeof(int), comparefunc);
+					fwrite(heap_array,sizeof(int),heap_count,fp);
+					fclose(fp);
+					node=(struct run*)malloc(sizeof(struct run));
+					if(head==NULL){
+						head=node;
+						tail=head;
+						head->next=NULL;
+						tail->next=NULL;
+						strcpy(tail->filename,name);
+						fp=fopen(name,"r+b");
+						fseek(fp,0,SEEK_END);
+						tail->totalsize=ftell(fp)/4;
+						fclose(fp);
+						
+					}
+					else{
+						tail->next=node;		
+						tail=tail->next;
+						tail->next=NULL;
+						strcpy(tail->filename,name);
+						fp=fopen(name,"r+b");
+						fseek(fp,0,SEEK_END);
+						tail->totalsize=ftell(fp)/4;
+						fclose(fp);
+					}
+					printf("finished here\n");
+					if(750-heap_count>0){
+						printf("in here\n");
+						runcount++;
+						name[20]="";
+						strcpy(name,argv[2]);
+						strcat(name,dot);
+						no=runcount;
+						str[5]="";
+						c=3;
+						while(c>0){
+							remain=no%10;
+							str[c-1]=remain+48;
+							no=no/10;
+							c--;
+						}
+						strcat(name,str);
+						fp=fopen(name,"w+b");
+						fclose(fp);
+						fp=fopen(name,"r+b");	
+						seekcount_run=0;
+						fseek(fp,0,SEEK_SET);
+						qsort(heap_array+heap_count,750-heap_count,sizeof(int), comparefunc);
+						fwrite(heap_array+heap_count,sizeof(int),750-heap_count,fp);
+						fclose(fp);
+						node=(struct run*)malloc(sizeof(struct run));
+						tail->next=node;		
+						tail=tail->next;
+						tail->next=NULL;
+						strcpy(tail->filename,name);
+						fp=fopen(name,"r+b");
+						fseek(fp,0,SEEK_END);
+						tail->totalsize=ftell(fp)/4;
+						fclose(fp);
+						}
+					break;
+					}
+				
+				}
+		if(heap_count>0){
+			if(heap_array[heap_init]<buffer_array[buff_count]){
+				outputbuffer[outputcount]=heap_array[heap_init];
+				outputcount++;
+				heap_array[heap_init]=buffer_array[buff_count];
+				buff_count++;
+				sift(heap_array,0,heap_count);
+			}
+			else if(heap_array[heap_init]>buffer_array[buff_count]){
+				outputbuffer[outputcount]=heap_array[heap_init];
+				outputcount++;
+				heap_array[heap_init]=heap_array[heap_count-1];
+				heap_array[heap_count-1]=buffer_array[buff_count];
+				buff_count++;
+				heap_count--;
+				sift(heap_array,0,heap_count);
+			}
+		}
+		else if(heap_count==0){
+			heap_count=750;
+			heapify(heap_array,heap_count);			
+		}
+		if(outputcount==1000 || heap_count==0){
+				if(heap_count==0){	
+					fp=fopen(name,"r+b");
+					fseek(fp,4*seekcount_run,SEEK_SET);
+					fwrite(outputbuffer,sizeof(int),outputcount,fp);			
+					seekcount_run=0;
+					fclose(fp);
+					outputcount=0;
+					for(i=0;i<1000;i++)
+						outputbuffer[i]=-1;
+				}
+				else if(outputcount==1000){
+					fp=fopen(name,"r+b");
+					fseek(fp,4*seekcount_run,SEEK_SET);
+					fwrite(outputbuffer,sizeof(int),outputcount,fp);			
+					seekcount_run=seekcount_run+outputcount;
+					fclose(fp);
+					outputcount=0;
+					for(i=0;i<1000;i++)
+						outputbuffer[i]=-1;
+				}
+		}
+		if(heap_count==0){
+			if(head==NULL){
+				node=(struct run*)malloc(sizeof(struct run));
+				head=node;
+				strcpy(head->filename,name);
+				fp=fopen(name,"r+b");
+				fseek(fp,0,SEEK_END);
+				head->totalsize=ftell(fp)/4;
+				fclose(fp);
+				head->next=NULL;
+				tail=head;				
+			}
+			else{
+				node=(struct run*)malloc(sizeof(struct run));
+				tail->next=node;		
+				tail=tail->next;
+				tail->next=NULL;
+				strcpy(tail->filename,name);
+				fp=fopen(name,"r+b");
+				fseek(fp,0,SEEK_END);
+				tail->totalsize=ftell(fp)/4;
+				fclose(fp);
+			}
+			runcount++;
+			name[20]="";
+			strcpy(name,argv[2]);
+			strcat(name,dot);
+			no=runcount;
+			str[5]="";
+			c=3;
+			while(c>0){
+				remain=no%10;
+				str[c-1]=remain+48;
+				no=no/10;
+				c--;
+			}
+			strcat(name,str);
+			//printf("name is %s\n",name);
+			fp=fopen(name,"w+b");
+			fclose(fp);
+		}	
+
+
+	}
+	runcount=runcount+1;
+	struct run runarray[runcount];
+	temp=head;
+	i=0;	
+	int inbuf;
+	inbuf=1000/runcount;
+	int comparearr[runcount];
+	int arr[1000];
+	while(temp!=tail->next){
+		strcpy(runarray[i].filename,temp->filename);
+		runarray[i].totalsize=temp->totalsize;
+		//printf("totalsize is %d for index %d\n",runarray[i].totalsize,i);
+		runarray[i].seekvalue=0;
+		runarray[i].init=0;
+		runarray[i].end=runarray[i].init+inbuf;
+		runarray[i].done=0;
+		temp=temp->next;
+		i++;	
+	}
+	i=0;
+	
+	while(i<runcount){
+		ft=fopen(runarray[i].filename,"r+b");
+		fseek(ft,0,SEEK_SET);
+		if(runarray[i].totalsize<inbuf){
+			fread(arr+(i*inbuf),sizeof(int),runarray[i].totalsize,ft);
+			runarray[i].init=0;
+			runarray[i].end=runarray[i].init+runarray[i].totalsize;
+			runarray[i].seekvalue=runarray[i].totalsize;
+			}
+		else{		
+			fread(arr+(i*inbuf),sizeof(int),inbuf,ft);
+			runarray[i].seekvalue=runarray[i].seekvalue+inbuf;
+			runarray[i].init=0;
+			runarray[i].end=runarray[i].init+inbuf;
+		}	
+		fclose(ft);
+		i++;
+	}
+	for(i=0;i<runcount;i++){
+		
+		comparearr[i]=arr[i*inbuf];
+		runarray[i].init++;
+	}
+	
+	for(i=0;i<1000;i++)
+		outputbuffer[i]=-1;
+	int min;
+	int index;
+	fp=fopen(argv[3],"w+b");
+	fclose(fp);
+	int total=0;
+	while(1){
+		min=2147483647;
+		index=-1;
+		for(i=0;i<runcount;i++){
+			if(comparearr[i]<min && runarray[i].done==0){
+				min=comparearr[i];
+				index=i;	
+			}
+		}
+		i=0;
+		if(outputbuffer[0]==-1){
+				outputbuffer[0]=min;				
+			}
+		else{	
+			while(i<1000 && outputbuffer[i]!=-1){
+					i++;								
+				}
+			
+			outputbuffer[i]=min;
+			}
+		//printf("min is %d\n",min);
+		if(i==999 || ((total_size-total)>0 && (total_size-total)<1000 && (i==total_size-total))){
+			fp=fopen(argv[3],"r+b");
+			fseek(fp,total*sizeof(int),SEEK_SET);
+			fwrite(outputbuffer,sizeof(int),i+1,fp);
+			total=total+i+1;
+			//printf("writing to output total is %d total_size is %d i is %d\n",total,total_size,i);	
+			if(total>=total_size){
+				printf("broken");			
+				break;
+			}
+			for(i=0;i<1000;i++)
+				outputbuffer[i]=-1;
+			fclose(fp);
+		}
+		if(runarray[index].init==runarray[index].end){
+			//if(total>=70000)
+			//printf("init is %d with end %d for index %d with totalsize %d with seekvalue %d\n",runarray[index].init,runarray[index].end,index,runarray[index].totalsize,runarray[index].seekvalue);
+			if(runarray[index].seekvalue>=runarray[index].totalsize){
+				runarray[index].done=1;
+				//printf("index %d is done with totalsize %d\n",index,runarray[index].totalsize);
+			}
+			else{
+				
+				ft=fopen(runarray[index].filename,"r+b");
+				fseek(ft,4*runarray[index].seekvalue,SEEK_SET);	
+				if(inbuf>(runarray[index].totalsize-runarray[index].seekvalue)){
+					fread(arr+(index*inbuf),sizeof(int),runarray[index].totalsize-runarray[index].seekvalue,ft);
+					runarray[index].init=0;
+					runarray[index].end=runarray[index].init+runarray[index].totalsize-runarray[index].seekvalue;
+					runarray[index].seekvalue=runarray[index].totalsize;
+				}
+				else	{
+					runarray[index].seekvalue=runarray[index].seekvalue+inbuf;
+					//printf("seekvalue is %d for index %d\n",runarray[index].seekvalue);			
+					fread(arr+(index*inbuf),sizeof(int),inbuf,ft);
+					runarray[index].init=0;
+					runarray[index].end=runarray[index].init+inbuf;
+					}
+				comparearr[index]=arr[index*inbuf+runarray[index].init];
+				runarray[index].init++;	
+				fclose(ft);
+			}
+		}
+			
+		else{
+			comparearr[index]=arr[index*inbuf+runarray[index].init];
+			runarray[index].init++;	
+	}	
+	}
+}
+void main(int argc,char *argv[]){
+
+char *method; 
+method=argv[1];
+
+if(strcmp(method,"--basic")==0)
+	basic(argv);
+
+else if(strcmp(method,"--multistep")==0)
+	multistep(argv);
+else if(strcmp(method,"--replacement")==0)
+	replacement(argv);
+
+else
+	return;
+
+}
